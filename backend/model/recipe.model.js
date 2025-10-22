@@ -1,0 +1,45 @@
+import mongoose from "mongoose";
+
+const recipeSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: [true, "Title required"],
+        maxLength: [100, "Recipe title can not exceed 100 characters"],
+        trim: True
+    },
+    description: {
+        type: String,
+        required: [true, "Description Required"],
+        trim: true,
+        maxLength: [1000, "Recipe description cannot exceed 500 characters"]
+    },
+    ingredients: {
+        type: [string], //array of string
+        required: [true, "Ingredients required"]
+    },
+    instructions: {
+        type: [string],
+        required: [true, "Instructions are required"],
+    },
+    type: {
+        type: String,
+        enum: ["Veg", "Non-Veg"],
+        required: [true, "Type required"]
+    },
+    imageUrl: {
+        type: String,
+        required: [true, "Recipe image required"]
+    },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    },
+    likes: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }
+}, { timestamps: true });
+
+const Recipe = mongoose.model("Recipe", "recipeSchema");
+
+export default Recipe;
