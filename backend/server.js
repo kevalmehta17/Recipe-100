@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
-import authRoutes from "./routes/auth.route";
+import authRoutes from "./routes/auth.route.js";
+import connectDB from "./config/db.js";
 
 dotenv.config();
 
@@ -18,4 +19,5 @@ app.use("/api/auth", authRoutes);
 
 app.listen(PORT, () => {
     console.log(`http://localhost:${PORT}`);
+    connectDB();
 })
