@@ -14,7 +14,7 @@ export const signup = async (req, res) => {
         }
         
         //check if user already exist
-        const existingUser = User.findOne({ email });
+        const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "User already exist" });
         }
@@ -51,4 +51,48 @@ export const signup = async (req, res) => {
         console.error("Error during signup", error.message);
         return res.status(500).json({ message: "Internal Server Error" });
     }
+}
+
+export const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ message: "All fields required" });
+        }
+        // find the user in DB
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(400).json({ message: "User doesn't exist" });
+        }
+        // match the password
+        const isPasswordMatch = await user.matchPassword(password);
+
+        if (!isPasswordMatch) {
+            return res.status(403).json({ message: "Password Invalid" });
+        }
+        //A 401 error means "I don't know who you are," while a 403 error means "I know who you are, but you are not allowed".
+        // If everything is ok then generate the token
+        const token = generateToken(user);
+        user.lastLogin = Date.now();
+        await user.save();
+
+        const { password : pwd, ...userWithoutPassword } = user._doc;
+
+        return res.status(200).json({
+            message: "Login Successfully",
+            ...userWithoutPassword,
+            token
+        })
+    } catch (error) {
+        console.error("Error during Login:-", error.message);
+        return res.status(500).json({ message: "Internal server Error" });
+    }
+}
+
+export const logout = async (req, res) => {
+    return res.status(200).json({
+        success:true,
+        message: "Logout successfully"
+    })
 }
