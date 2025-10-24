@@ -26,6 +26,11 @@ const recipeSchema = new mongoose.Schema({
         enum: ["Veg", "Non-Veg"],
         required: [true, "Type required"]
     },
+    mealType: {
+        type: String,
+        enum: ["Breakfast", "Lunch", "Dinner", "Snack", "Dessert", "Brunch"],
+        required: [true, "Meal-Type is required"]
+    },
     imageUrl: {
         type: String,
         required: [true, "Recipe image required"]

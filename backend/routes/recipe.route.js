@@ -1,5 +1,6 @@
-import express from "expres";
+import express from "express";
 import {protectRoute} from "../middleware/auth.middleware.js";
+import { getAllRecipe, getRecipeById } from "../controllers/recipe.controller.js";
 
 const router = express.Router();
 

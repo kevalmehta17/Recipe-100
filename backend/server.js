@@ -1,7 +1,9 @@
 import express from "express";
 import dotenv from "dotenv";
-import authRoutes from "./routes/auth.route.js";
 import connectDB from "./config/db.js";
+import authRoutes from "./routes/auth.route.js";
+import recipeRoutes from "./routes/recipe.route.js";
+
 
 dotenv.config();
 
@@ -15,6 +17,7 @@ app.use(express.json());
 // routes
 
 app.use("/api/auth", authRoutes);
+app.use('/api/recipes', recipeRoutes);
 
 
 app.listen(PORT, () => {
