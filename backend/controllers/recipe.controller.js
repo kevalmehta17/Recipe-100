@@ -157,63 +157,48 @@ export const updateRecipe = async (req, res) => {
     }
 }
 
+export const deleteRecipe = async (req, res) => {
+    try {
+        const { id } = req.params;
 
-// export const updateRecipe = async (req, res) => {
-//     try {
-//         const { id } = req.params;
-//         const { title, description, ingredients, instructions, type, mealType, imageUrl } = req.body;
+        // validate the mongoDBId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Provide the valid id to delete" });
+        }
 
-//         // validate the mongoDB ID
-//         if (!mongoose.Types.ObjectId.isValid(id)) {
-//             return res.status(400).json({ message: "Invalid recipe Id" });
-//         }
+        const recipe = await Recipe.findById(id);
+        if (!recipe) {
+            return res.status(404).json({ message: "No Recipe found." });
+        }
+        // validate user authorization
+        if (req.user !== recipe.createdBy.toString()) {
+            return res.status(401).json({message: "You are no permission to delete the Recipe"});
+        }
 
-//         // find the recipe by ID
-//         const recipe = await Recipe.findById(id);
+        // delete the image of that recipe from the cloudinary
+        if (recipe.imageUrl) {
+            try {
+                const publicId = recipe.imageUrl.split("/").slice(-2).join("/").split(".")[0];
+                await cloudinary.uploader.destroy(publicId);
+                console.log("Public id to delete is:-", publicId);
+            } catch (error) {
+                console.error("Error during deleting image from cloudinary");
+                return res.status(500).json({ message: "Internal server error" });
+            }
+        }
+        // Delete the document from the mongoDB
 
-//         if (!recipe) {
-//             return res.status(404).json({ message: "Recipe not found" });
-//         }
+        await Recipe.findByIdAndDelete(id);
+        return res.status(200).json({ success: true, message: "Deleted successfully" });
+       
+    } catch (error) {
+        console.error("Error during deleting Recipe", error.message);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+// for this controller user get his recipe that he/she uploaded on website
+export const getMyRecipe = async(req, res)=> {
 
-//         // verify that the user is the owner of the recipe
-//         if (recipe.createdBy.toString() !== req.user.toString()) {
-//             return res.status(403).json({ message: "You are not authorized to update this recipe" });
-//         }
-
-//         // handle the image upload to cloudinary if new image is provided
-//         let finalImageUrl = imageUrl || recipe.imageUrl;
-//         if (imageUrl && imageUrl.startsWith("data:image/")) {
-//             try {
-//                 const uploadResponse = await cloudinary.uploader.upload(imageUrl, {
-//                     folder: "Recipe-100"
-//                 });
-//                 finalImageUrl = uploadResponse.secure_url;
-//             } catch (error) {
-//                 console.error("Error uploading image to Cloudinary:-", error.message);
-//                 return res.status(500).json({ message: "Image upload failed" });
-//             }
-//         }
-
-//         // update the recipe fields
-//         recipe.title = title || recipe.title;
-//         recipe.description = description || recipe.description;
-//         recipe.ingredients = ingredients || recipe.ingredients;
-//         recipe.instructions = instructions || recipe.instructions;
-//         recipe.type = type || recipe.type;
-//         recipe.mealType = mealType || recipe.mealType;
-//         recipe.imageUrl = finalImageUrl;
-
-//         // save the updated recipe
-//         const updatedRecipe = await recipe.save();
-
-//         return res.status(200).json({
-//             success: true,
-//             message: "Recipe updated successfully",
-//             recipe: updatedRecipe
-//         });
-        
-//     } catch (error) {
-//         console.error("Error during updateRecipe:-", error.message);
-//         return res.status(500).json({message : "Internal Server Error"});
-//     }
-// }
+    
+    
+}
