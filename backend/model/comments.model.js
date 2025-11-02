@@ -1,20 +1,28 @@
 import mongoose, { Types } from "mongoose";
 
 const commentSchema = new mongoose.Schema({
-    sender: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref:"User",
-    },
-    receiver: {
+    user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
+        required: true
     },
-    content: {
+    recipe: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Recipe",
+        required: true
+    },
+    text: {
         type: String,
-        maxLength: [200, "Comment cannot exceed 200 characters"],
-        minLength:[1, "comment cannot be less than 1 character"]
+        required: [true, "Comment text is required"],
+        maxLength: [500, "Comment cannot exceed 500 characters"],
+        minLength: [1, "Comment cannot be empty"],
+        trim: true
     }
-})
+}, { timestamps: true });
+
+// Index for faster queries
+commentSchema.index({ recipe: 1, createdAt: -1 });
+commentSchema.index({ user: 1 });
 
 const Comment = mongoose.model("Comment", commentSchema);
 

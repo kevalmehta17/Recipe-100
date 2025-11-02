@@ -43,7 +43,15 @@ const recipeSchema = new mongoose.Schema({
     likes: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
-    }]
+    }],
+    likesCount: {
+        type: Number,
+        default:0
+    },
+    commentsCount: {
+        type: Number,
+        default:0
+    }
 }, { timestamps: true });
 
 const Recipe = mongoose.model("Recipe", recipeSchema);
