@@ -25,7 +25,7 @@ export const addComment = async (req, res) => {
         // increment the comment count
         await Recipe.findByIdAndUpdate(recipeId, { $inc: { commentsCount: 1 } });
 
-        await comment.populate('user', 'username bio');
+        await comment.populate('user', 'username bio profilePic');
 
         return res.status(201).json({
             message: "Comment added successfully",
@@ -83,7 +83,7 @@ export const getCommentsByRecipe = async (req, res) => {
         
         // Get all comments for this recipe with user details
         const comments = await Comment.find({ recipe: recipeId })
-            .populate('user', 'username bio')
+            .populate('user', 'username bio profilePic')
             .sort({ createdAt: -1 });  // Newest first
 
         return res.status(200).json({

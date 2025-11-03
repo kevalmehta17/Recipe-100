@@ -60,7 +60,7 @@ export const getMySavedRecipes = async (req, res) => {
                 path: 'savedRecipes',
                 populate: {
                     path: 'createdBy',
-                    select: 'username bio'
+                    select: 'username bio profilePic'
                 }
             });
 

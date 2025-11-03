@@ -63,7 +63,7 @@ export const getMyLikedRecipe = async (req, res) => {
                 path: 'likedRecipes',
                 populate: {
                     path: 'createdBy',
-                    select: 'username bio'
+                    select: 'username bio profilePic'
                 }
             });
 
@@ -97,7 +97,7 @@ export const getLikedRecipes = async (req, res) => {
         }
         
         const recipe = await Recipe.findById(recipeId)
-            .populate('likes', 'username bio');  
+            .populate('likes', 'username bio profilePic');  
         
         
         if (!recipe) {

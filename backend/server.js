@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.route.js";
 import recipeRoutes from "./routes/recipe.route.js";
+import profileRoutes from "./routes/profile.route.js";
 import commentRoutes from "./routes/comment.route.js";
 import likeRoutes from "./routes/like.route.js";
 import saveRoutes from "./routes/save.route.js";
@@ -21,6 +22,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use('/api/recipes', recipeRoutes);
+app.use("/api/profile", profileRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/likes", likeRoutes);  
 app.use("/api/saves", saveRoutes);  

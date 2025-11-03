@@ -27,6 +27,10 @@ const userSchema = new mongoose.Schema({
         default: "Hey there! I love sharing recipes!🍳",
         maxLength: [150, "Bio cannot exceed 150 characters"]
     },
+    profilePic: {
+        type: String,
+        default: "/uploads/default-avatar.png"  // Will be served from frontend/public
+    },
     likedRecipes: [
         {
             type: mongoose.Schema.Types.ObjectId,

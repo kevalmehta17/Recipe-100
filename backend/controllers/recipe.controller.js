@@ -17,7 +17,7 @@ export const getAllRecipe = async (req, res) => {
             filter.mealType = mealType;
         }
         // fetch the recipes from db based on filter
-        const recipes = await  Recipe.find(filter).populate("createdBy", "username bio").sort({ createdAt: -1 });
+        const recipes = await  Recipe.find(filter).populate("createdBy", "username bio profilePic").sort({ createdAt: -1 });
 
         if (recipes.length == 0) {
             return res.status(404).json({ message: "No Recipe found currently" });
@@ -41,7 +41,7 @@ export const getRecipeById = async (req, res) => {
             return res.status(400).json({ message: "Invalid recipe Id" });
         }
 
-        const recipe = await Recipe.findById(id).populate("createdBy", "username bio");
+        const recipe = await Recipe.findById(id).populate("createdBy", "username bio profilePic");
 
         if (!recipe) {
             return res.status(404).json({ message: "No Recipe found on this ID" });
@@ -200,7 +200,7 @@ export const deleteRecipe = async (req, res) => {
 // for this controller user get his recipe that he/she uploaded on website
 export const getMyRecipe = async(req, res)=> {
     try {
-        const recipe = await Recipe.find({ createdBy: req.user }).populate( "createdBy","username bio");
+        const recipe = await Recipe.find({ createdBy: req.user }).populate( "createdBy","username bio profilePic");
         if (recipe.length === 0) {
             return res.status(404).json({ message: "No Recipe found for the current user" });
         }
