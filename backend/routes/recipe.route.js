@@ -4,12 +4,8 @@ import {
   createRecipe, 
   deleteRecipe, 
   getAllRecipe, 
-  getLikedRecipes, 
   getMyRecipe, 
   getRecipeById, 
-  getSavedRecipe, 
-  likeRecipe, 
-  savedRecipe, 
   updateRecipe 
 } from "../controllers/recipe.controller.js";
 
@@ -28,12 +24,6 @@ router.delete("/:id", protectRoute, deleteRecipe);
 // ---- FETCH USER-SPECIFIC LISTS ---- //
 // IMPORTANT: define these before "/:id" routes
 router.get("/user/me", protectRoute, getMyRecipe);
-router.get("/user/me/likes", protectRoute, getLikedRecipes);
-router.get("/user/me/saved", protectRoute, getSavedRecipe);
-
-// ---- ACTION ROUTES (like/save) ---- //
-router.post("/:id/like", protectRoute, likeRecipe);
-router.post("/:id/save", protectRoute, savedRecipe);
 
 router.get("/:id", getRecipeById);
 

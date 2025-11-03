@@ -1,6 +1,7 @@
 import Recipe from "../model/recipe.model.js";
 import mongoose from "mongoose";
 import cloudinary from "../config/cloudinary.js";
+import User from "../model/user.model.js";
 
 export const getAllRecipe = async (req, res) => {
     try {
@@ -203,43 +204,10 @@ export const getMyRecipe = async(req, res)=> {
         if (recipe.length === 0) {
             return res.status(404).json({ message: "No Recipe found for the current user" });
         }
-        return res.status(200).json({ success: true, message: recipe });
+        return res.status(200).json({ success: true, data: recipe });
     } catch (error) {
         console.error("Error in getMyRecipe:-", error.message);
         res.status(500).json({ message: "Internal Server Error" });
     }    
 }
 
-// this will give the which user liked current recipe
-export const getLikedRecipes = async (req, res) => {
-    try {
-        const recipe = await Recipe.find({ likes: req.user }).populate("createdBy", "username bio");
-
-        if (recipe.length === 0) {
-            return res.status(404).json({ message: "No liked Recipe found" });
-        }
-        return res.status(200).json({ success: true, data: recipe });
-        
-    } catch (error) {
-        console.error("Error in getLikedRecipes:- ", error.message);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
-}
-
-// this will give the current user saved recipe
-export const getSavedRecipe = async (req, res) => {
-    try {
-        // this will populate the current user saved recipe
-        const recipe = await Recipe.findById(req.user).populate("savedRecipe");
-
-        if (recipe.length === 0) {
-            return res.status(404).json({ message: "No saved Recipe found" });
-        }
-
-        return res.status(200).json({ success: true, data: recipe });
-        
-    } catch (error) {
-        console.error("Error during getSavedRecipe:-", error.message);
-        return res.status(500).json({ success: false, message: "Internal Server Error" });
-    }
-}
