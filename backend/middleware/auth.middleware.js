@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 
-export const protectRoute = async (req, res) => {
+export const protectRoute = async (req, res, next) => {
     try {
         // Authorization : Bearer <token>
         const authHeader = req.header("Authorization");

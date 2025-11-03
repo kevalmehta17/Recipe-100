@@ -27,6 +27,12 @@ const userSchema = new mongoose.Schema({
         default: "Hey there! I love sharing recipes!🍳",
         maxLength: [150, "Bio cannot exceed 150 characters"]
     },
+    likedRecipes: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Recipe"
+        }
+    ],
     savedRecipes: [
         {
             type: mongoose.Schema.Types.ObjectId,
