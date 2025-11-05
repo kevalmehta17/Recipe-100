@@ -7,7 +7,7 @@ export const getAllRecipe = async (req, res) => {
     try {
         // extract the user requirement from the query params
         // GET /api/recipes?type=Veg&mealType=Dinner
-        const { type, mealType } = req.query;
+        const { type, mealType, search, sortBy, page, limit } = req.query;
         // build the filter object that help to filter the recipes
         const filter = {};
         if (type) {
@@ -16,8 +16,39 @@ export const getAllRecipe = async (req, res) => {
         if (mealType) {
             filter.mealType = mealType;
         }
+        if (search !== undefined) {
+            filter.$or = [
+                { title: { $regex: search, $options: "i" } },
+                { ingredients: { $regex: search, $options: "i" } }
+            ]
+        }
+        // SortBy logic
+        const sortOptions = {
+            newest: { createdAt: -1 }, // Newest first
+            oldest: { createdAt: 1 }, // Oldest to newest
+            mostLiked: { likeCount: -1 }, //highest like count
+            mostCommented: {commentCount: -1} //highest comment count
+            
+        }
+        // byDefault
+        let sortCriteria = { createdAt: -1 }; // Default sort by newest
+        // if user provides the sortBy
+        if (sortOptions[sortBy]) {
+            sortCriteria = sortOptions[sortBy]
+        }
+            // 1 means ascending order (newest to oldest)
+            // -1 means descending order (oldest to newest)
+        // Advance sorting :- sortBy=createdAt:desc,likeCount:asc
+        else if (sortBy) {
+            const sortFields = sortBy.split(",");
+            sortFields.forEach(field => {
+                const [key, order] = field.split(":");
+                sortCriteria[key] = order === "asc" ? 1 : -1;
+            })
+        }
+     
         // fetch the recipes from db based on filter
-        const recipes = await  Recipe.find(filter).populate("createdBy", "username bio profilePic").sort({ createdAt: -1 });
+        const recipes = await  Recipe.find(filter).populate("createdBy", "username bio profilePic").sort(sortCriteria);
 
         if (recipes.length == 0) {
             return res.status(404).json({ message: "No Recipe found currently" });
@@ -177,14 +208,22 @@ export const deleteRecipe = async (req, res) => {
         }
 
         // delete the image of that recipe from the cloudinary
-        if (recipe.imageUrl) {
+        if (recipe.imageUrl && recipe.imageUrl.includes("cloudinary.com")) {
             try {
-                const publicId = recipe.imageUrl.split("/").slice(-2).join("/").split(".")[0];
-                await cloudinary.uploader.destroy(publicId);
-                console.log("Public id to delete is:-", publicId);
+                // Extract public_id from Cloudinary URL
+                // URL format: https://res.cloudinary.com/[cloud_name]/image/upload/v[version]/[folder]/[public_id].[format]
+                const urlParts = recipe.imageUrl.split("/");
+                const uploadIndex = urlParts.indexOf("upload");
+                if (uploadIndex !== -1 && uploadIndex + 2 < urlParts.length) {
+                    // Get everything after 'upload/v[version]/' and remove the file extension
+                    const pathAfterUpload = urlParts.slice(uploadIndex + 2).join("/");
+                    const publicId = pathAfterUpload.substring(0, pathAfterUpload.lastIndexOf("."));
+                    await cloudinary.uploader.destroy(publicId);
+                    console.log("Cloudinary image deleted, public id:", publicId);
+                }
             } catch (error) {
-                console.error("Error during deleting image from cloudinary");
-                return res.status(500).json({ message: "Internal server error" });
+                console.error("Error deleting image from Cloudinary:", error.message);
+                // Continue with recipe deletion even if image deletion fails
             }
         }
         // Delete the document from the mongoDB
