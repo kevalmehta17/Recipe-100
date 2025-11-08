@@ -166,6 +166,7 @@ export const getUserProfile = async (req, res) => {
             return res.status(400).json({ message: "Invalid user ID" });
         }
 
+    
         // Get user (without password, email, and private data)
         const user = await User.findById(userId).select("-password -email -likedRecipes -savedRecipes");
         
@@ -184,7 +185,7 @@ export const getUserProfile = async (req, res) => {
                 bio: user.bio,
                 profilePic: user.profilePic,
                 recipesCount: recipesCount,
-                createdAt: user.createdAt
+                createdAt: user.createdAt,
             }
         });
     } catch (error) {

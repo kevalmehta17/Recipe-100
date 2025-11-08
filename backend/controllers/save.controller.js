@@ -55,15 +55,9 @@ export const toggleSave = async (req, res) => {
 // Get current user's saved recipes (private - only for their own profile)
 export const getMySavedRecipes = async (req, res) => {
     try {
-        const user = await User.findById(req.user)
-            .populate({
-                path: 'savedRecipes',
-                populate: {
-                    path: 'createdBy',
-                    select: 'username bio profilePic'
-                }
-            });
-
+        // First, get user to know total saved recipes
+        const user = await User.findById(req.user);
+        
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -72,10 +66,28 @@ export const getMySavedRecipes = async (req, res) => {
             return res.status(404).json({ message: "No saved recipes found" });
         }
 
+        // Pagination Logic
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const totalSavedRecipes = user.savedRecipes.length;
+
+        // Fetch paginated recipes directly from Recipe collection
+        const recipes = await Recipe.find({ _id: { $in: user.savedRecipes } })
+            .populate('createdBy', 'username bio profilePic')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
         return res.status(200).json({
             success: true,
-            count: user.savedRecipes.length,
-            recipes: user.savedRecipes
+            count: totalSavedRecipes,
+            recipes: recipes,
+            pagination: {
+                totalItems: totalSavedRecipes,
+                currentPage: page,
+                totalPages: Math.ceil(totalSavedRecipes / limit)
+            }
         });
     } catch (error) {
         console.error("Error in getMySavedRecipes:", error.message);

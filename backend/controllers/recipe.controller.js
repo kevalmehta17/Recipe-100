@@ -7,7 +7,7 @@ export const getAllRecipe = async (req, res) => {
     try {
         // extract the user requirement from the query params
         // GET /api/recipes?type=Veg&mealType=Dinner
-        const { type, mealType, search, sortBy, page, limit } = req.query;
+        const { type, mealType, search, sortBy } = req.query;
         // build the filter object that help to filter the recipes
         const filter = {};
         if (type) {
@@ -26,8 +26,8 @@ export const getAllRecipe = async (req, res) => {
         const sortOptions = {
             newest: { createdAt: -1 }, // Newest first
             oldest: { createdAt: 1 }, // Oldest to newest
-            mostLiked: { likeCount: -1 }, //highest like count
-            mostCommented: {commentCount: -1} //highest comment count
+            mostLiked: { likesCount: -1 }, //highest like count
+            mostCommented: { commentsCount: -1 } //highest comment count
             
         }
         // byDefault
@@ -46,15 +46,25 @@ export const getAllRecipe = async (req, res) => {
                 sortCriteria[key] = order === "asc" ? 1 : -1;
             })
         }
-     
+        // pagination logic
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        // total count for pagination
+        const totalRecipes = await Recipe.countDocuments(filter);
         // fetch the recipes from db based on filter
-        const recipes = await  Recipe.find(filter).populate("createdBy", "username bio profilePic").sort(sortCriteria);
+        const recipes = await Recipe.find(filter).populate("createdBy", "username bio profilePic").sort(sortCriteria).skip(skip).limit(limit);
 
         if (recipes.length == 0) {
             return res.status(404).json({ message: "No Recipe found currently" });
         }
         // If everything is good then return the recipes that found
-        return res.status(200).json({ recipes });
+        return res.status(200).json({
+            success: true, recipes, pagination: {
+                totalItems: totalRecipes,
+                currentPage: page,
+                totalPages: Math.ceil(totalRecipes / limit)
+        } });
 
     } catch (error) {
         console.error("Error During getAllRecipe", error.message);

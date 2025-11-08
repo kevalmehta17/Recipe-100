@@ -58,15 +58,9 @@ export const toggleLike = async (req, res) => {
 
 export const getMyLikedRecipe = async (req, res) => {
     try {
-        const user = await User.findById(req.user)
-            .populate({
-                path: 'likedRecipes',
-                populate: {
-                    path: 'createdBy',
-                    select: 'username bio profilePic'
-                }
-            });
-
+        // First, get user to know total liked recipes
+        const user = await User.findById(req.user);
+        
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -75,10 +69,28 @@ export const getMyLikedRecipe = async (req, res) => {
             return res.status(404).json({ message: "No liked recipes found" });
         }
 
+        // Pagination Logic
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const totalLikedRecipes = user.likedRecipes.length;
+
+        // Fetch paginated recipes directly from Recipe collection
+        const recipes = await Recipe.find({ _id: { $in: user.likedRecipes } })
+            .populate('createdBy', 'username bio profilePic')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
         return res.status(200).json({
             success: true,
-            count: user.likedRecipes.length,
-            recipes: user.likedRecipes
+            count: totalLikedRecipes,
+            recipes: recipes,
+            pagination: {
+                totalItems: totalLikedRecipes,
+                currentPage: page,
+                totalPages: Math.ceil(totalLikedRecipes / limit)
+            }
         });
     } catch (error) {
         console.error("Error during fetching getMyLikedRecipe:-", error.message);
@@ -99,12 +111,11 @@ export const getLikedRecipes = async (req, res) => {
         const recipe = await Recipe.findById(recipeId)
             .populate('likes', 'username bio profilePic');  
         
-        
         if (!recipe) {
             return res.status(404).json({ message: "Recipe not found" });
         }
         
-        // OR check if no likes:
+        // Check if no likes:
         if (recipe.likes.length === 0) {
             return res.status(200).json({ 
                 likesCount: 0, 
@@ -112,10 +123,25 @@ export const getLikedRecipes = async (req, res) => {
                 message: "No user liked this recipe yet"
             });
         }
+
+        // Pagination Logic
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const totalLikes = recipe.likes.length;
+
+        // Manually paginate the likes array
+        const paginatedLikes = recipe.likes.slice(skip, skip + limit);
+
         return res.status(200).json({
             success: true,
-            likesCount: recipe.likesCount,
-            likes: recipe.likes  // Array of user objects who liked
+            likesCount: totalLikes,
+            likes: paginatedLikes,
+            pagination: {
+                totalItems: totalLikes,
+                currentPage: page,
+                totalPages: Math.ceil(totalLikes / limit)
+            }
         });
     } catch (error) {
         console.error("Error during getLikedRecipes", error.message);

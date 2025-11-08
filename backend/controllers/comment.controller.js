@@ -76,20 +76,34 @@ export const getCommentsByRecipe = async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(recipeId)) {
             return res.status(400).json({ message: "Provide the valid mongoId" });
         }
+        
         const recipe = await Recipe.findById(recipeId);
         if (!recipe) {
             return res.status(404).json({ message: "No recipe found on this id" });
         }
+
+        // Pagination Logic
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const totalComments = await Comment.countDocuments({ recipe: recipeId });
         
-        // Get all comments for this recipe with user details
+        // Get comments for this recipe with pagination
         const comments = await Comment.find({ recipe: recipeId })
             .populate('user', 'username bio profilePic')
-            .sort({ createdAt: -1 });  // Newest first
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
 
         return res.status(200).json({
             success: true,
             commentsCount: recipe.commentsCount,
-            comments
+            comments,
+            pagination: {
+                totalItems: totalComments,
+                currentPage: page,
+                totalPages: Math.ceil(totalComments / limit)
+            }
         });
     } catch (error) {
         console.error("Error during getCommentsByRecipe", error.message);
